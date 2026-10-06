@@ -2,9 +2,10 @@
 
 > Unity 기반 협업 프로젝트 **RoadKill** 저장소입니다.  
 > 원활한 협업과 에셋 충돌 방지를 위해 아래 가이드를 반드시 준수해 주세요.
-> 잘 모르겠다 싶으면 GPT나 Gemini같은데 물어보세요.
 
 ---
+
+잘 모르겠다 싶으면 GPT나 Gemini같은데 물어보세요.
 
 ## 1. 최초 프로젝트 세팅 (팀원 필수)
 
@@ -19,7 +20,7 @@ git lfs install
 ### 2) 프로젝트 클론
 
 ```bash
-git clone [https://github.com/AXF4/RoadKill.git](https://github.com/AXF4/RoadKill.git)
+git clone https://github.com/AXF4/RoadKill.git
 cd RoadKill
 
 ```
