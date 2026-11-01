@@ -1,0 +1,36 @@
+{
+  "group_id": "e018ff33-852b-438f-b1af-5f55941f5f57",
+  "states": [
+    {
+      "character": {
+        "id": "201a7db1-b250-4b0a-9d84-f053fe1d775f",
+        "name": "Idle",
+        "prompt": "\ube68\uac04\uc0c9 \uc624\ud1a0\ubc14\uc774 \ud5ec\uba67\uc744 \ucc29\uc6a9.  \ubc29\ud0c4 \uc870\ub07c\ub97c \uc785\uc74c. ",
+        "size": {
+          "width": 32,
+          "height": 32
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-10-29T03:45:10.229690+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-10-29T03:53:03.875771"
+}
