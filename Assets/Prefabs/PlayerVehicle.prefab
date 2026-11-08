@@ -194,6 +194,7 @@ GameObject:
   - component: {fileID: 2513158174362980006}
   - component: {fileID: 4749329796104368831}
   - component: {fileID: 9186438733047171948}
+  - component: {fileID: 5240123154050001962}
   m_Layer: 0
   m_Name: PlayerVehicle
   m_TagString: Untagged
@@ -306,6 +307,22 @@ MonoBehaviour:
   vehicleData: {fileID: 11400000, guid: 63578d9c475cfb949bc5de6458358ac3, type: 2}
   driverSeat: {fileID: 3964880412217522765}
   mainCam: {fileID: 0}
+--- !u!114 &5240123154050001962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3559252251243188704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb32fe4bfb31121459f41641e8578750, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VehicleCombat
+  rushDamage: 100
+  minRushSpeed: 8
+  hitStopDuration: 0.1
+  enemyTag: Enemy
 --- !u!1 &8827652969898899782
 GameObject:
   m_ObjectHideFlags: 0
