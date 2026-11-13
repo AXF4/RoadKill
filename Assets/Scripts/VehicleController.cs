@@ -14,6 +14,7 @@ public class VehicleController : MonoBehaviour
     private Rigidbody2D rb;
     private Vector2 moveInput;
     private bool isBoosting;
+    public bool IsBoosting => isBoosting;
     private float currentBoostSpeed;
 
     private void Awake()
