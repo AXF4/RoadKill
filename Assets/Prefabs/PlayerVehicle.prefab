@@ -81,7 +81,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 2dbb07364f4bf9740bae3e7f16e16a9d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4bb0c1b7289547b40ae91ead3a8c792a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -118,7 +118,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.2, y: 2.4, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 270989450712212456}
@@ -172,8 +172,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 74442ea5ba6e45344a1e03de47221c8b, type: 3}
-  m_Color: {r: 1, g: 0.5246936, b: 0, a: 1}
+  m_Sprite: {fileID: 21300000, guid: e356c11b59ff6e749a7233b7aebb986a, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -307,6 +307,10 @@ MonoBehaviour:
   vehicleData: {fileID: 11400000, guid: 63578d9c475cfb949bc5de6458358ac3, type: 2}
   driverSeat: {fileID: 3964880412217522765}
   mainCam: {fileID: 0}
+  wallTag: Wall
+  boostWallBounceForce: 12
+  normalWallBounceForce: 4
+  wallStunDuration: 0.2
 --- !u!114 &5240123154050001962
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -321,7 +325,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VehicleCombat
   rushDamage: 100
   minRushSpeed: 8
+  boostStartGraceTime: 0.2
   hitStopDuration: 0.1
+  hitCooldown: 0.35
   enemyTag: Enemy
 --- !u!1 &8827652969898899782
 GameObject:
