@@ -1,5 +1,6 @@
+using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem; // New Input System 네임스페이스
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class VehicleController : MonoBehaviour
@@ -11,11 +12,21 @@ public class VehicleController : MonoBehaviour
     [SerializeField] private Transform driverSeat;
     [SerializeField] private Camera mainCam;
 
+    [Header("벽 충돌 설정")]
+    [SerializeField] private string wallTag = "Wall";
+    [SerializeField] private float boostWallBounceForce = 12f; // 돌진 중 벽 충돌 반동 세기
+    [SerializeField] private float normalWallBounceForce = 4f; // 일반 주행 중 벽 충돌 반동 세기
+    [SerializeField] private float wallStunDuration = 0.2f;    // 벽 충돌 후 조작 경직 시간
+
     private Rigidbody2D rb;
     private Vector2 moveInput;
     private bool isBoosting;
     public bool IsBoosting => isBoosting;
+    public float BoostStartTime { get; private set; }
+
     private float currentBoostSpeed;
+    private bool isWallStunned;
+    private Coroutine wallStunRoutine;
 
     private void Awake()
     {
@@ -27,10 +38,17 @@ public class VehicleController : MonoBehaviour
 
     private void Update()
     {
-        // 1. 하드웨어 키보드 입력 직접 감지 (New Input System)
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
+        // 벽 충돌 경직 중에는 입력 무시
+        if (isWallStunned)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
+
+        // 1. 이동 입력
         float h = 0f;
         float v = 0f;
 
@@ -45,6 +63,7 @@ public class VehicleController : MonoBehaviour
         if (keyboard.spaceKey.wasPressedThisFrame)
         {
             isBoosting = true;
+            BoostStartTime = Time.time;
             float baseSpeed = vehicleData != null ? vehicleData.normalSpeed : 6f;
             currentBoostSpeed = Mathf.Max(rb.linearVelocity.magnitude, baseSpeed);
         }
@@ -56,7 +75,13 @@ public class VehicleController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // vehicleData가 없으면 기본값으로라도 움직이게 방어 코드 처리
+        // 벽에 부딪혀 튕겨나가는 동안에는 관성 감속만 적용
+        if (isWallStunned)
+        {
+            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, 5f * Time.fixedDeltaTime);
+            return;
+        }
+
         float normalSpd = vehicleData != null ? vehicleData.normalSpeed : 6f;
         float normalAcc = vehicleData != null ? vehicleData.normalAcceleration : 20f;
         float normalDec = vehicleData != null ? vehicleData.normalDeceleration : 15f;
@@ -94,7 +119,7 @@ public class VehicleController : MonoBehaviour
     private void HandleBoostMovement(float maxSpeed, float accel, float steerForce, float turnSpeed)
     {
         var mouse = Mouse.current;
-        Vector2 aimDirection = transform.up; // 마우스 없을 때 기본 전방
+        Vector2 aimDirection = transform.up;
 
         if (mouse != null && mainCam != null)
         {
@@ -110,6 +135,39 @@ public class VehicleController : MonoBehaviour
 
         float targetAngle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg - 90f;
         rb.rotation = Mathf.LerpAngle(rb.rotation, targetAngle, turnSpeed * Time.fixedDeltaTime);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!collision.gameObject.CompareTag(wallTag)) return;
+
+        // 벽 표면의 수직 바깥 방향(법선 벡터)
+        Vector2 normal = collision.contactCount > 0 ? collision.GetContact(0).normal : -rb.linearVelocity.normalized;
+
+        if (isBoosting)
+        {
+            // 돌진 중 벽에 박으면 부스트 강제 해제 + 강하게 튕겨나감 + 짧은 조작 경직
+            isBoosting = false;
+            currentBoostSpeed = 0f;
+            rb.linearVelocity = Vector2.zero;
+            rb.AddForce(normal * boostWallBounceForce, ForceMode2D.Impulse);
+
+            if (wallStunRoutine != null) StopCoroutine(wallStunRoutine);
+            wallStunRoutine = StartCoroutine(WallStunRoutine());
+        }
+        else
+        {
+            // 일반 주행 충돌: 가볍게 밀어냄
+            rb.AddForce(normal * normalWallBounceForce, ForceMode2D.Impulse);
+        }
+    }
+
+    private IEnumerator WallStunRoutine()
+    {
+        isWallStunned = true;
+        yield return new WaitForSeconds(wallStunDuration);
+        isWallStunned = false;
+        wallStunRoutine = null;
     }
 
     public void ApplySeatPosition()

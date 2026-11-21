@@ -1,19 +1,22 @@
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(VehicleController), typeof(Rigidbody2D))]
 public class VehicleCombat : MonoBehaviour
 {
     [Header("공격 설정")]
-    [SerializeField] private float rushDamage = 100f;       // 돌진 시 가하는 대미지
-    [SerializeField] private float minRushSpeed = 8f;        // 공격 판정이 인정되는 최소 돌진 속도
-    [SerializeField] private float hitStopDuration = 0.05f;  // 역경직(타격감) 지속 시간
+    [SerializeField] private float rushDamage = 100f;
+    [SerializeField] private float minRushSpeed = 8f;
+    [SerializeField] private float boostStartGraceTime = 0.2f; // 돌진 시작 직후에는 속도가 0이어도 타격 허용
+    [SerializeField] private float hitStopDuration = 0.08f;
+    [SerializeField] private float hitCooldown = 0.35f;
 
     [Header("피격자 태그")]
     [SerializeField] private string enemyTag = "Enemy";
 
     private VehicleController controller;
     private Rigidbody2D rb;
+    private readonly Dictionary<GameObject, float> lastHitTimes = new Dictionary<GameObject, float>();
 
     private void Awake()
     {
@@ -21,49 +24,48 @@ public class VehicleCombat : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        HandleImpact(collision.gameObject, collision.contacts[0].point);
-    }
+    private void OnCollisionEnter2D(Collision2D collision) => TryRushAttack(collision.gameObject);
+    private void OnCollisionStay2D(Collision2D collision) => TryRushAttack(collision.gameObject);
+    private void OnTriggerEnter2D(Collider2D other) => TryRushAttack(other.gameObject);
+    private void OnTriggerStay2D(Collider2D other) => TryRushAttack(other.gameObject);
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void TryRushAttack(GameObject target)
     {
-        HandleImpact(other.gameObject, other.ClosestPoint(transform.position));
-    }
-
-    private void HandleImpact(GameObject target, Vector2 impactPoint)
-    {
-        // 1. 대상이 적인지 확인 (태그 또는 IDamageable)
         var damageable = target.GetComponent<IDamageable>();
         if (damageable == null && !target.CompareTag(enemyTag)) return;
 
-        // 2. 현재 돌진(부스트) 중이고 일정 속도 이상인지 체크
-        bool isRushing = controller.IsBoosting && rb.linearVelocity.magnitude >= minRushSpeed;
+        // 1. 돌진 중인지 확인
+        // - 일반 주행 돌진: 부스트 중 + 최소 속도 이상
+        // - 이미 붙어있는 상태: 부스트를 누른 직후(boostStartGraceTime 이내)라면 속도가 낮아도 초기 돌진 타격 인정
+        bool isJustStartedBoost = controller.IsBoosting && (Time.time - controller.BoostStartTime <= boostStartGraceTime);
+        bool isHighSpeedBoost = controller.IsBoosting && rb.linearVelocity.magnitude >= minRushSpeed;
 
-        if (isRushing)
+        if (!isJustStartedBoost && !isHighSpeedBoost) return;
+
+        // 2. 개별 적 피격 쿨타임 체크
+        if (lastHitTimes.TryGetValue(target, out float lastTime))
         {
-            Vector2 knockbackDir = rb.linearVelocity.normalized;
-            damageable?.TakeDamage(rushDamage, knockbackDir, gameObject);
+            if (Time.time - lastTime < hitCooldown) return;
+        }
+        lastHitTimes[target] = Time.time;
 
-            // HitStopManager 호출: 공격자(플레이어)와 피격자(적)를 전달하여 두 대상만 살리고 화면 회색조 탈색
-            if (HitStopManager.Instance != null)
-            {
-                HitStopManager.Instance.TriggerHitStop(gameObject, target, hitStopDuration);
-            }
+        // 3. 넉백 방향 계산 (정지 상태에서 들이박을 경우 적 방향 또는 차체 정면 방향 사용)
+        Vector2 knockbackDir;
+        if (rb.linearVelocity.sqrMagnitude > 0.1f)
+        {
+            knockbackDir = rb.linearVelocity.normalized;
         }
         else
         {
-            // [일반 저속 충돌]
-            // 단순 접촉 시에는 대미지를 주지 않고 차체가 튕기거나 멈춤
-            Debug.Log("[RoadKill] 일반 접촉: 돌진 상태가 아니어서 적을 들이받지 못했습니다.");
+            Vector2 toTarget = (Vector2)target.transform.position - rb.position;
+            knockbackDir = toTarget.sqrMagnitude > 0.001f ? toTarget.normalized : (Vector2)transform.up;
         }
-    }
 
-    private IEnumerator HitStopRoutine()
-    {
-        // 충돌 순간 찰나의 프레임 정지 (타격감)
-        Time.timeScale = 0.05f;
-        yield return new WaitForSecondsRealtime(hitStopDuration);
-        Time.timeScale = 1f;
+        damageable?.TakeDamage(rushDamage, knockbackDir, gameObject);
+
+        if (HitStopManager.Instance != null)
+        {
+            HitStopManager.Instance.TriggerHitStop(gameObject, target, hitStopDuration);
+        }
     }
 }
